@@ -3,10 +3,10 @@ local M = {}
 -- Default plugin configuration
 local default_config = {
 	extension = "md",
-	featurePattern = "%[%[([%w%-%_/%s]+)%]%]",
+	featurePattern = "%[%[([%w%._%-/ ]+)%]%]",
 	tagPattern = "#([%w%-_]+)",
-	featureLoc = "features", -- ✅ default location for feature files
-	tagLoc = "tags", -- ✅ default location for tag files
+	featureLoc = "features",
+	tagLoc = "tags",
 	wikilink = true,
 }
 
@@ -94,8 +94,12 @@ local function check_and_create(config)
 
 	-- Process tags
 	for tag in content:gmatch(config.tagPattern) do
-		local path = string.format("%s/%s.%s", config.tagLoc, tag, config.extension)
-		ensure_file(path, "#" .. tag)
+		-- Ensure it's not preceded by another '#' or space (rudimentary lookbehind)
+		local valid_tag = content:match("[^#]%#" .. tag) or content:match("^#" .. tag)
+		if valid_tag then
+			local path = string.format("%s/%s.%s", config.tagLoc, tag, config.extension)
+			ensure_file(path, "#" .. tag)
+		end
 	end
 end
 
